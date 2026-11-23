@@ -70,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     func applicationDidFinishLaunching(_ notification: Notification) {
         if let dir = Snapshot.outputDir { MainActor.assumeIsolated { Snapshot.run(to: dir) } }
+        if let dir = Snapshot.glassOutputDir { MainActor.assumeIsolated { Snapshot.runGlass(to: dir) } }
     }
 }
 
@@ -155,9 +156,17 @@ enum BackupPanels {
 struct SettingsView: View {
     @EnvironmentObject var store: LibraryStore
     @EnvironmentObject var license: LicenseManager
+    @AppStorage(GlassTheme.key) private var glass = false
 
     var body: some View {
         Form {
+            Section("Appearance") {
+                Toggle(isOn: $glass) {
+                    Text("Liquid Glass theme")
+                    Text(GlassTheme.supported ? "Floating panels, cards and buttons use Apple’s Liquid Glass." : "Requires macOS 26.")
+                }
+                .disabled(!GlassTheme.supported)
+            }
             Section("Goals") {
                 Stepper("Books per year: \(store.data.goals.booksPerYear)", value: $store.data.goals.booksPerYear, in: 1...365)
                 Stepper("Pages per day: \(store.data.goals.pagesPerDay)", value: $store.data.goals.pagesPerDay, in: 1...500, step: 5)
@@ -176,6 +185,6 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 380)
+        .frame(width: 460, height: 520)
     }
 }

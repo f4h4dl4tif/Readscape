@@ -15,7 +15,14 @@ rm -rf "$STAGE" "$DMG"
 mkdir -p "$STAGE"
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
+cp "Installer/How to Install.txt" "$STAGE/"
 hdiutil create -volname "Readscape" -srcfolder "$STAGE" -fs HFS+ -format UDZO -imagekey zlib-level=9 -ov "$DMG" >/dev/null
 codesign --force --sign - "$DMG"
 rm -rf "$STAGE"
 echo "Created $DMG"
+
+# Ship the DMG and the install guide (also inside the DMG) in dist/.
+mkdir -p dist
+cp "$DMG" dist/
+cp "Installer/How to Install.txt" "dist/How to Install.txt"
+echo "Copied to dist/: $(basename "$DMG"), How to Install.txt"

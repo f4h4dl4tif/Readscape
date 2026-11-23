@@ -1,0 +1,66 @@
+How to install Readscape
+========================
+
+Requires macOS 14 Sonoma or later. Runs on Apple Silicon Macs only (M1 or
+newer); it won't open on Intel Macs. The Liquid Glass theme needs macOS 26
+or later.
+
+Readscape isn't notarized by Apple, so on a new Mac macOS blocks it the first
+time. Install it as below, and use the Terminal fixes if it fails.
+
+
+INSTALL: Disk image (Readscape-x.x-AppleSilicon.dmg)
+----------------------------------------------------
+1. Open the .dmg and drag Readscape onto the Applications folder.
+2. Open Readscape from Applications. If macOS says it "can't be opened" or
+   "could not verify" it: click Done (don't move it to the Bin), open
+   System Settings > Privacy & Security, scroll to Security and click
+   "Open Anyway" next to Readscape. Enter your password.
+
+
+IF IT STILL FAILS: Terminal commands
+------------------------------------
+Open Terminal (Applications > Utilities > Terminal), paste a command, press
+Return and type your Mac password when asked (nothing shows as you type).
+
+1. Readscape is installed but won't open, or macOS says it is "damaged":
+
+       sudo xattr -cr /Applications/Readscape.app && open /Applications/Readscape.app
+
+2. "Open Anyway" doesn't appear, or the .dmg itself is blocked:
+
+       xattr -c ~/Downloads/Readscape-*
+
+   then double-click the file again.
+
+3. Import from Apple Books fails, or you clicked "Don't Allow" when macOS
+   asked whether Readscape may access data from other apps:
+
+       tccutil reset All app.readscape.mac
+
+   then quit and reopen Readscape, run File > Import from Apple Books...
+   again and click Allow when macOS asks.
+
+4. Check the Mac is new enough (must say 14 or higher):
+
+       sw_vers -productVersion
+
+
+AFTER INSTALLING
+----------------
+On first launch, choose Load Sample Library to see every screen filled in,
+or import your books with File > Import from Goodreads or StoryGraph...,
+Import Kindle Highlights... or Import from Apple Books... (you see a preview
+before anything changes). Settings (Command-,) has the Liquid Glass theme
+(macOS 26+) and your reading goals. The free version holds 20 books
+and 1 reading map; a license key unlocks unlimited use. Only book searches and
+cover downloads go to Open Library; everything else stays on this Mac.
+
+Your library is saved in ~/Library/Application Support/Readscape
+(library.json plus covers/). Use File > Export Library Backup... before
+moving to another Mac, then File > Restore Library Backup... on the new one.
+
+To uninstall (this also deletes your library and your license key, so back
+up first): quit Readscape, then run
+
+       rm -rf /Applications/Readscape.app ~/Library/Application\ Support/Readscape && defaults delete app.readscape.mac

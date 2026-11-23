@@ -166,3 +166,38 @@ struct EmptyState: View {
 extension Date {
     var short: String { formatted(date: .abbreviated, time: .omitted) }
 }
+
+// MARK: - Liquid Glass theme
+
+/// Liquid Glass theme setting (macOS 26+). Off by default; when off Readscape looks exactly as before.
+enum GlassTheme {
+    static let key = "glassTheme"
+    static var supported: Bool {
+        if #available(macOS 26, *) { return true }
+        return false
+    }
+}
+
+extension View {
+    /// Liquid Glass in `shape` when the theme is on, otherwise the given plain background.
+    @ViewBuilder
+    func glassSurface<S: Shape, B: View>(_ glassOn: Bool, in shape: S, @ViewBuilder plain: () -> B) -> some View {
+        if #available(macOS 26, *), glassOn {
+            self.glassEffect(.regular, in: shape)
+        } else {
+            self.background(plain())
+        }
+    }
+
+    /// `.glass` / `.glassProminent` button style when the theme is on; otherwise `fallback` styling is kept.
+    @ViewBuilder
+    func glassButton(_ glassOn: Bool, prominent: Bool = false) -> some View {
+        if #available(macOS 26, *), glassOn {
+            if prominent { self.buttonStyle(.glassProminent) } else { self.buttonStyle(.glass) }
+        } else if prominent {
+            self.buttonStyle(.borderedProminent)
+        } else {
+            self
+        }
+    }
+}

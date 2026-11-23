@@ -110,6 +110,7 @@ struct GraphScreen: View {
     @State private var didAutoFit = false
     @AppStorage("graphColorBy") private var colorBy = "status"
     @AppStorage("graphSharedTags") private var showSharedTags = false
+    @AppStorage(GlassTheme.key) private var glass = false
 
     private var map: ReadingMap? { mapID.flatMap { id in store.data.maps.first { $0.id == id } } }
     private var books: [Book] {
@@ -397,7 +398,7 @@ struct GraphScreen: View {
         .font(.caption2)
         .foregroundStyle(.secondary)
         .padding(10)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .glassSurface(glass, in: RoundedRectangle(cornerRadius: 10)) { RoundedRectangle(cornerRadius: 10).fill(.regularMaterial) }
     }
 
     private func legendRow(_ c: Color, _ t: String) -> some View {
@@ -418,8 +419,8 @@ struct GraphScreen: View {
                     }
                 }
                 HStack {
-                    Button("Open Book") { state.open(book: b.id) }.buttonStyle(.borderedProminent)
-                    Button("Connect…") { connecting = b }
+                    Button("Open Book") { state.open(book: b.id) }.glassButton(glass, prominent: true)
+                    Button("Connect…") { connecting = b }.glassButton(glass)
                 }
                 Divider()
                 Text("Connections").font(.subheadline.weight(.semibold))

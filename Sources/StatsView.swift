@@ -262,6 +262,7 @@ struct StatTile: View {
 }
 
 struct Tooltip: View {
+    @AppStorage(GlassTheme.key) private var glass = false
     let title: String
     let value: String
     var body: some View {
@@ -270,7 +271,7 @@ struct Tooltip: View {
             Text(value).font(.caption.weight(.semibold))
         }
         .padding(.horizontal, 8).padding(.vertical, 5)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
+        .glassSurface(glass, in: RoundedRectangle(cornerRadius: 6)) { RoundedRectangle(cornerRadius: 6).fill(.regularMaterial) }
         .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
     }
 }

@@ -66,6 +66,82 @@ enum Snapshot {
         exit(0)
     }
 
+    // MARK: Liquid Glass captures
+
+    static var glassOutputDir: String? {
+        guard let i = CommandLine.arguments.firstIndex(of: "--glass-snapshot"), i + 1 < CommandLine.arguments.count else { return nil }
+        return CommandLine.arguments[i + 1]
+    }
+
+    /// `Readscape --glass-snapshot <dir>`: each main screen and Settings with the Liquid Glass theme off and on,
+    /// light and dark. Captures the real on-screen window (cacheDisplay can't draw Liquid Glass).
+    /// Run with CFFIXED_USER_HOME pointing at a scratch folder; the glass preference is put back afterwards.
+    static func runGlass(to dir: String) {
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        let defaults = UserDefaults.standard
+        let savedGlass = defaults.object(forKey: GlassTheme.key)
+        let store = LibraryStore.shared
+        if store.data.books.isEmpty { store.data = SampleData.make() }
+        let state = AppState.shared
+        func wait(_ s: Double) { RunLoop.main.run(until: Date().addingTimeInterval(s)) }
+
+        let root = ContentView().environmentObject(store).environmentObject(state).environmentObject(LicenseManager.shared)
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1280, height: 820),
+                              styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
+        window.contentViewController = NSHostingController(rootView: root)
+        window.toolbarStyle = .unified
+        window.isReleasedWhenClosed = false
+        window.center()
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        wait(1.0)
+        NSApp.windows.filter { $0 !== window && !($0 is NSPanel) }.forEach { $0.orderOut(nil) }
+        window.setContentSize(NSSize(width: 1280, height: 820))
+
+        let settings = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 460, height: 460), styleMask: [.titled, .closable], backing: .buffered, defer: false)
+        settings.title = "Settings"
+        settings.isReleasedWhenClosed = false
+        settings.contentView = NSHostingView(rootView: SettingsView().environmentObject(store).environmentObject(LicenseManager.shared))
+
+        let reading = store.data.books.first { $0.status == .reading }!.id
+        for dark in [false, true] {
+            NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+            for glass in [false, true] {
+                defaults.set(glass, forKey: GlassTheme.key)
+                let suffix = "\(glass ? "glass" : "plain")-\(dark ? "dark" : "light")"
+                let steps: [(String, () -> Void, Double)] = [
+                    ("library", { state.path = []; state.selection = .library(nil) }, 1.2),
+                    ("book", { state.path = [reading] }, 1.0),
+                    ("graph", { state.path = []; state.selection = .graph(nil) }, 6.0),
+                    ("stats", { state.selection = .stats }, 1.5),
+                ]
+                window.makeKeyAndOrderFront(nil)
+                for (name, action, delay) in steps {
+                    action()
+                    wait(delay)
+                    capture(window, to: "\(dir)/\(name)-\(suffix).png")
+                }
+                settings.center()
+                settings.makeKeyAndOrderFront(nil)
+                wait(1.0)
+                capture(settings, to: "\(dir)/settings-\(suffix).png")
+                settings.orderOut(nil)
+            }
+        }
+        if let savedGlass { defaults.set(savedGlass, forKey: GlassTheme.key) } else { defaults.removeObject(forKey: GlassTheme.key) }
+        exit(0)
+    }
+
+    private typealias CapFn = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+
+    private static func capture(_ window: NSWindow, to path: String) {
+        guard let sym = dlsym(dlopen(nil, RTLD_NOW), "CGWindowListCreateImage") else { return }
+        let f = unsafeBitCast(sym, to: CapFn.self)
+        guard let img = f(.null, 8, UInt32(window.windowNumber), 1 | 8)?.takeRetainedValue() else { return }
+        try? NSBitmapImageRep(cgImage: img).representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
+        print("glass-snapshot: wrote \(path)")
+    }
+
     private static func save(_ window: NSWindow, to path: String) {
         guard let view = window.contentView?.superview ?? window.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }

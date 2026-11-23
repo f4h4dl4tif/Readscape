@@ -5,6 +5,7 @@ struct ContentView: View {
     @EnvironmentObject var state: AppState
     @EnvironmentObject var license: LicenseManager
     @State private var renamingMap: ReadingMap?
+    @AppStorage(GlassTheme.key) private var glass = false
 
     var body: some View {
         NavigationSplitView {
@@ -76,7 +77,7 @@ struct ContentView: View {
                         Spacer()
                     }
                     .padding(10)
-                    .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
+                    .glassSurface(glass, in: RoundedRectangle(cornerRadius: 8)) { RoundedRectangle(cornerRadius: 8).fill(.quaternary.opacity(0.6)) }
                 }
                 .buttonStyle(.plain)
                 .padding(10)

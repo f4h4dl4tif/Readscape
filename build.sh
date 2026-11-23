@@ -5,7 +5,7 @@ set -e
 if [[ -z "$DEVELOPER_DIR" && -d /Applications/Xcode.app ]]; then export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer; fi
 cd "$(dirname "$0")"
 APP=build/Readscape.app
-VERSION=1.0
+VERSION=1.1
 rm -rf "$APP" build/Readscape.iconset
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
@@ -25,7 +25,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleIconFile</key><string>Readscape</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
-  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleVersion</key><string>2</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
   <key>NSHighResolutionCapable</key><true/>
